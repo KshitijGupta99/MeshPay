@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-white text-black font-sans antialiased;
+  }
+}
+
+/* Force pointer cursor on all buttons and clickable elements */
+button, a, select, input[type="submit"], input[type="button"], [role="button"] {
+  cursor: pointer !important;
+}
+
