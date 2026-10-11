@@ -28,6 +28,7 @@ export default function Dashboard() {
   // Fetch real balance from Bank-Service
   const fetchRealBalance = async () => {
     if (!senderUpiId) return;
+    setBalanceLoading(true);
     try {
       const res = await axios.get(`${bankServiceUrl}/api/accounts/upi/${senderUpiId}`);
       if (res.data && res.data.currentBalance !== undefined) {
@@ -35,6 +36,8 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error('Failed to fetch account balance from Bank-Service:', err);
+    } finally {
+      setBalanceLoading(false);
     }
   };
 
@@ -78,10 +81,21 @@ export default function Dashboard() {
     e.preventDefault();
     setPaymentError('');
 
-    if (!payee || !amount || parseFloat(amount) <= 0) return;
+    const trimmedPayee = payee.trim();
+    const parsedAmount = Number(amount);
+
+    if (!trimmedPayee) {
+      setPaymentError('Enter the recipient UPI ID.');
+      return;
+    }
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setPaymentError('Enter an amount greater than ₹0.00.');
+      return;
+    }
 
     // Client-side self-transfer check
-    if (payee.trim().toLowerCase() === senderUpiId.toLowerCase()) {
+    if (trimmedPayee.toLowerCase() === senderUpiId.toLowerCase()) {
       setPaymentError('You cannot send money to your own UPI ID.');
       return;
     }
@@ -91,8 +105,8 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(`${transactionServiceUrl}/api/transactions`, {
-        receiverUpiId: payee.trim(),
-        amount: parseFloat(amount)
+        receiverUpiId: trimmedPayee,
+        amount: parsedAmount
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -171,7 +185,9 @@ export default function Dashboard() {
             <div>
               <span className="text-black text-xs uppercase tracking-wider font-bold">Account Balance</span>
               <div className="mt-4">
-                <span className="text-4xl font-extrabold text-black">₹{Number(balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                <span className="text-4xl font-extrabold text-black">
+                  {balanceLoading ? 'Loading...' : `₹${Number(balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+                </span>
                 <p className="text-black text-xs mt-2">Linked to UPI: <span className="font-mono font-bold">{senderUpiId}</span></p>
               </div>
             </div>
