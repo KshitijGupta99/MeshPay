@@ -98,4 +98,3 @@ To shut down all containers and clean up the database volumes:
 ```bash
 docker compose down -v
 ```
-# MeshPay
